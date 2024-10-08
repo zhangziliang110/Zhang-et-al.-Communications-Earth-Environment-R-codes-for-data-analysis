@@ -1,0 +1,215 @@
+#Pearson correlation analysis
+install.packages("Rmisc")
+install.packages("ggcorrplot")
+install.packages("extrafont")
+library(Rmisc) 
+library(corrplot)
+library(ggcorrplot)
+library(RColorBrewer)
+library(grDevices)
+library(extrafont)
+library(extrafontdb)
+library(Rttf2pt1)
+#The following correlation analysis corresponds to data collected in 2021
+Data1 <- read.csv("CorrelationVariation_new_mantel2.csv", header = T,row.names = 1)#Data1 corresponds to Episodic hot spot in 2021
+Data1<-t(Data1)#Reverse data
+Data1<-as.data.frame(Data1)
+cor_new1<-cor(Data1,method="pearson")
+res1<-cor.mtest(Data1, conf.level= .95)#Significance test
+
+Data2 <- read.csv("CorrelationCold_new_mantel2.csv", header = T,row.names = 1)#Data2 corresponds to Consistent cold spot in 2021
+
+Data2<-t(Data2)#Reverse data
+Data2<-as.data.frame(Data2)
+cor_new2<-cor(Data2,method="pearson")
+res2<-cor.mtest(Data2, conf.level= .95)
+
+m=par(no.readonly = TRUE) # Figure parameters
+png("corrplot.png",
+  type = "cairo", # 
+  res = 300, # 3
+  width = 4500, height = 4500,
+  bg = "transparent" # 
+)
+par(mfrow=c(1,2))# 
+#a
+corrplot(cor_new1, method = "circle", p.mat=res1$p,insig="label_sig",sig.level = c(.001, .01, .05),pch.cex = 0.95,type = "upper", tl.pos = "lt",tl.col="black",tl.cex=1)
+corrplot(cor_new1, add = TRUE, type = "lower", method = "number", p.mat=res1$p,insig="blank",diag = FALSE, tl.pos = "n", cl.pos = "n")
+#b
+corrplot(cor_new2, method = "circle", p.mat=res2$p,insig="label_sig",sig.level = c(.001, .01, .05),pch.cex = 0.95,type = "upper", tl.pos = "lt",tl.col="black",tl.cex=1)
+corrplot(cor_new2, add = TRUE, type = "lower", method = "number", p.mat=res2$p,insig="blank",diag = FALSE, tl.pos = "n", cl.pos = "n")
+dev.off()
+par(m) # 
+
+#The following correlation analysis corresponds to data collected in 2022
+Data3 <- read.csv("CorrelationCold_2022.csv", header = T,row.names = 1)#Data3 corresponds to consistent cold spot in 2022
+Data3<-t(Data3)#Reverse data
+Data3<-as.data.frame(Data3)
+cor_new3<-cor(Data3,method="pearson")
+res3<-cor.mtest(Data3, conf.level= .95)#Significance test
+
+Data4 <- read.csv("CorrelationVariation_2022.csv", header = T,row.names = 1)#Data4 corresponds to Episodic hot spot in 2022
+Data4<-t(Data4)#Reverse data
+Data4<-as.data.frame(Data4)
+cor_new4<-cor(Data4,method="pearson")
+res4<-cor.mtest(Data4, conf.level= .95)
+
+m=par(no.readonly = TRUE) # Figure parameters
+png("corrplot.png",
+  type = "cairo", # 
+  res = 300, # 3
+  width = 4500, height = 4500,
+  bg = "transparent" # 
+)
+par(mfrow=c(1,2))# 
+#c
+corrplot(cor_new3, method = "circle", p.mat=res3$p,insig="label_sig",sig.level = c(.001, .01, .05),pch.cex = 0.95,type = "upper", tl.pos = "lt",tl.col="black",tl.cex=1)
+corrplot(cor_new3, add = TRUE, type = "lower", method = "number", p.mat=res3$p,insig="blank",diag = FALSE, tl.pos = "n", cl.pos = "n")
+#d
+corrplot(cor_new4, method = "circle", p.mat=res4$p,insig="label_sig",sig.level = c(.001, .01, .05),pch.cex = 0.95,type = "upper", tl.pos = "lt",tl.col="black",tl.cex=1)
+corrplot(cor_new4, add = TRUE, type = "lower", method = "number", p.mat=res4$p,insig="blank",diag = FALSE, tl.pos = "n", cl.pos = "n")
+dev.off()
+par(m) # 
+
+
+
+#PLS-SEM analysis
+install.packages("lavaan", dependencies = TRUE)
+library(lavaan)
+#log transformation was performed deemed necessary
+
+#SEM- Consistent cold spot-2022
+SEM1 <- read.csv("SEM1_Plsms_Cold_2022.csv", header = T,row.names = 1)
+SEM1_blocks <- list(
+ST = 'ST',
+WFPS = 'WFPS',
+Fe_redox='Fe_redox',
+NH4='NH4',
+NO3='NO3',
+pH='pH',
+DOC='DOC',
+Production = 'Production',
+Reduction = 'Reduction'
+)
+SEM1_blocks
+ST<-c(0,0,0,0,0,0,0,0,0)
+WFPS<-c(1,0,0,0,0,0,0,0,0)
+Fe_redox<-c(1,1,0,0,0,0,0,0,0)
+NH4<-c(1,1,1,0,0,0,0,0,0)
+pH<-c(1,1,0,1,0,0,0,0,0)
+DOC<-c(1,1,1,0,1,0,0,0,0)
+NO3<-c(1,1,1,1,1,0,0,0,0)
+Production<-c(1,1,1,1,1,1,1,0,0)
+Reduction<-c(1,1,1,0,1,1,1,0,0)
+SEM1_path <- rbind(ST, WFPS, Fe_redox,NH4,pH,DOC,NO3,Production,Reduction)
+colnames(SEM1_path) <- rownames(SEM1_path)
+SEM1_path
+SEM1_modes<-rep('A',9)
+SEM1_modes
+SEM1_pls <- plspm(SEM1, SEM1_path, SEM1_blocks, modes = SEM1_modes)
+SEM1_pls
+summary(SEM1_pls)    
+
+#SEM- Episodic hot spot-2022
+SEM2 <- read.csv("SEM1_Plsms_Variation_2022.csv", header = T,row.names = 1)
+SEM2_blocks <- list(
+ST = 'ST',
+WFPS = 'WFPS',
+Fe_redox='Fe_redox',
+NH4='NH4',
+pH='pH',
+DOC='DOC',
+NO3='NO3',
+Production = 'Production',
+Reduction = 'Reduction'
+)
+SEM2_blocks
+ST<-c(0,0,0,0,0,0,0,0,0)
+WFPS<-c(1,0,0,0,0,0,0,0,0)
+Fe_redox<-c(1,1,0,0,0,0,0,0,0)
+NH4<-c(1,1,1,0,0,0,0,0,0)
+pH<-c(1,1,0,1,0,0,0,0,0)
+DOC<-c(1,1,1,0,1,0,0,0,0)
+NO3<-c(1,1,1,1,1,0,0,0,0)
+Production<-c(1,1,1,1,1,1,1,0,0)
+Reduction<-c(1,1,1,0,1,1,1,0,0)
+SEM2_path <- rbind(ST, WFPS, Fe_redox,NH4,pH,DOC,NO3,Production,Reduction)
+colnames(SEM2_path) <- rownames(SEM2_path)
+SEM2_path
+SEM2_modes<-rep('A',9)
+SEM2_modes
+SEM2_pls <- plspm(SEM1, SEM1_path, SEM1_blocks, modes = SEM1_modes)
+SEM2_pls
+summary(SEM2_pls)
+
+#SEM- Consistent cold spot-2021
+SEM3 <- read.csv("SEM1_Plsms_Cold_2021.csv", header = T,row.names = 1)
+SEM3_blocks <- list(
+ST = 'ST',
+WFPS = 'WFPS',
+Fe_redox='Fe_redox',
+NH4='NH4',
+NO3='NO3',
+pH='pH',
+DOC='DOC',
+GNR='GNR',
+POC='POC',
+Production = 'Production',
+Reduction = 'Reduction'
+)
+SEM3_blocks
+ST<-c(0,0,0,0,0,0,0,0,0,0,0)
+WFPS<-c(1,0,0,0,0,0,0,0,0,0,0)
+Fe_redox<-c(1,1,0,0,0,0,0,0,0,0,0)
+NH4<-c(1,1,1,0,0,0,0,0,0,0,0)
+pH<-c(1,1,0,1,0,0,0,0,0,0,0)
+POC<-c(1,1,1,0,1,0,0,0,0,0,0)
+DOC<-c(1,1,1,0,1,1,0,0,0,0,0)
+GNR<-c(1,1,1,1,1,1,1,0,0,0,0)
+NO3<-c(1,1,1,1,1,1,1,1,0,0,0)
+Production<-c(1,1,1,1,1,1,1,1,1,0,0)
+Reduction<-c(1,1,1,1,1,1,1,1,1,0,0)
+SEM3_path <- rbind(ST, WFPS, Fe_redox,NH4,pH,POC,DOC,GNR,NO3,Production,Reduction)
+colnames(SEM3_path) <- rownames(SEM3_path)
+SEM3_path
+SEM3_modes<-rep('A',11)
+SEM3_modes
+SEM3_pls <- plspm(SEM3, SEM3_path, SEM3_blocks, modes = SEM3_modes)
+SEM3_pls
+summary(SEM3_pls)    
+
+#SEM- Episodic hot spot-2021
+SEM4 <- read.csv("SEM1_Plsms_variation_2021.csv", header = T,row.names = 1)
+SEM4_blocks <- list(
+ST = 'ST',
+WFPS = 'WFPS',
+Fe_redox='Fe_redox',
+NH4='NH4',
+NO3='NO3',
+pH='pH',
+DOC='DOC',
+GNR='GNR',
+POC='POC',
+Production = 'Production',
+Reduction = 'Reduction'
+)
+SEM4_blocks
+ST<-c(0,0,0,0,0,0,0,0,0,0,0)
+WFPS<-c(1,0,0,0,0,0,0,0,0,0,0)
+Fe_redox<-c(1,1,0,0,0,0,0,0,0,0,0)
+NH4<-c(1,1,1,0,0,0,0,0,0,0,0)
+pH<-c(1,1,0,1,0,0,0,0,0,0,0)
+POC<-c(1,1,1,0,1,0,0,0,0,0,0)
+DOC<-c(1,1,1,0,1,1,0,0,0,0,0)
+GNR<-c(1,1,1,1,1,1,1,0,0,0,0)
+NO3<-c(1,1,1,1,1,1,1,1,0,0,0)
+Production<-c(1,1,1,1,1,1,1,1,1,0,0)
+Reduction<-c(1,1,1,1,1,1,1,1,1,0,0)
+SEM4_path <- rbind(ST, WFPS, Fe_redox,NH4,pH,POC,DOC,GNR,NO3,Production,Reduction)
+colnames(SEM4_path) <- rownames(SEM4_path)
+SEM4_path
+SEM4_modes<-rep('A',11)
+SEM4_modes
+SEM4_pls <- plspm(SEM4, SEM4_path, SEM4_blocks, modes = SEM4_modes)
+SEM4_pls
+summary(SEM4_pls)    
